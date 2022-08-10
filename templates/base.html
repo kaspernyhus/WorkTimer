@@ -1,0 +1,27 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  
+    
+    <!-- Custom -->
+    <link rel="stylesheet" href="{% static '/style.css' %}">
+    <title>Work Timer</title>
+</head>
+<body>
+
+  
+  <!-- Main Content -->
+  {% block content %}
+  {% endblock %}
+
+
+  
+  <script src="{% static 'js/main.js' %} "></script>
+  
+</body>
+</html>

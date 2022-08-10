@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+
+<div class="center">
+  <form method="POST" action=".">
+    {% csrf_token %}
+    <div class="btn-group">
+      <a href="{% url 'take_timestamp' %}" class="button">{% if latest.state == True %} STOP {% else %} START {% endif %} </a>
+    </div>
+  </form>
+  <div><a href="">manuel</a></div>
+  <br>
+
+  <span><h3>{{ today_date }}</h3></span>
+
+  <div class="tablediv">
+    <table class="fixed">
+      <tr>
+        <th>Start</th>
+        <th>Stop</th>
+        <th>Varighed</th>
+      </tr>
+      {% for data in day_data %}
+      <tr>
+        <td>
+          {{ data.start|date:'H:i' }}
+        </td>
+        <td>
+          {{ data.end|date:'H:i' }}
+        </td>
+        <td>
+          {{ data.dur }}
+        </td>
+      </tr>
+    {% endfor %}
+    </table>
+    <br>
+    <span><h3>Dagstotal {{ day_total }}</h3></span>
+  </div>
+
+
+  <button>Exporter</button>
+</div>
+
+{% endblock %}
