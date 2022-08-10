@@ -1,0 +1,1 @@
+# Django project to calculate hours spend at work
