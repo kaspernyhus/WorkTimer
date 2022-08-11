@@ -34,6 +34,7 @@ body {
   cursor: pointer;
   box-sizing: border-box;
   position: relative;
+  margin-top: 20px;
 }
 
 .gem-button {
