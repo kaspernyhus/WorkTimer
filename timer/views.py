@@ -166,3 +166,4 @@ def show_all_weeks(request):
     'week_data': all_week_totals,
   }
   return render(request, 'all_weeks_view.html', context)
+  
