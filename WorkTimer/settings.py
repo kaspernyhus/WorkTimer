@@ -28,6 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
+    'nhworktimer.pythonanywhere.com'
 ]
 
 
