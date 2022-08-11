@@ -2,28 +2,52 @@ from cmath import nan
 from time import time
 from django.shortcuts import render, redirect
 from .models import *
+from .forms import ManualEntry
 from datetime import datetime, timedelta
+
+
+def format_timedelta(time):
+  return ':'.join(str(time).split(':')[:2])
+
+
+def get_quote_info(quote):
+  day_data = []
+  total = timedelta(0,0,0)
+  # No data in quote
+  if not quote:
+    return [{'start': 0, 'end': 0, 'dur': 0}], 0
+  # Quote must start with state True
+  if quote[0].state == False:
+    start_index = 1
+  else:
+    start_index = 0
+  for index in range(start_index,len(quote),2):
+    try:
+      start = quote[index].timestamp
+      end = quote[index+1].timestamp
+      dur = end-start
+      total = total + dur
+      day_data.append({'start': start, 'end': end, 'dur': ':'.join(str(dur).split(':')[:2])})
+    except Exception as e:
+      print("!!!! Error getting interval data !!!!", e)
+  return day_data, total
 
 
 def get_day_data(date): 
   day_quote = TimeStamp.objects.filter(timestamp__date=date)
-  day_data = []
-  # Check for data. First entry for a new day must be of type START (true)
-  if day_quote and day_quote[0].state == False:
-    print("Error")
-    return [{'start': 0, 'end': 0, 'dur': 0}], 0
-  else:
-    total = timedelta(0,0,0)
-    for index in range(0,len(day_quote),2):
-      try:
-        start = day_quote[index].timestamp
-        end = day_quote[index+1].timestamp
-        dur = end-start
-        total = total + dur
-        day_data.append({'start': start, 'end': end, 'dur': ':'.join(str(dur).split(':')[:2])})
-      except:
-        pass
-    return day_data, total
+  return get_quote_info(day_quote)
+
+
+def get_week_data(week_number):
+  week_quary = TimeStamp.objects.filter(timestamp__week=week_number)
+  return get_quote_info(week_quary)
+
+
+def insert_entry(year, month, day, hour, minute, second, state):
+  timestamp = TimeStamp()
+  timestamp.timestamp = datetime(year,month,day,hour,minute,second)
+  timestamp.state = state
+  timestamp.save()
 
 
 def check_for_date_crossing(latest):
@@ -34,21 +58,16 @@ def check_for_date_crossing(latest):
     print("Latest entry yesterday")
     if today_date == latest.timestamp.date() + timedelta(1):
       print("Inserting entries at midnight")
-      timestamp1 = TimeStamp()
-      year = latest.timestamp.date().year
-      month = latest.timestamp.date().month
-      day = latest.timestamp.date().day
-      timestamp1.timestamp = datetime(year,month,day,23,59,59,123456)
-      timestamp1.state = False
-      timestamp1.save()
-
-      timestamp2 = TimeStamp()
-      year = today_date.year
-      month = today_date.month
-      day = today_date.day
-      timestamp2.timestamp = datetime(year,month,day,00,00,00,123456)
-      timestamp2.state = True
-      timestamp2.save()
+      insert_entry(
+        latest.timestamp.date().year,
+        latest.timestamp.date().month,
+        latest.timestamp.date().day,
+        23,59,59,False)
+      insert_entry(
+        today_date.year,
+        today_date.month,
+        today_date.day,
+        00,00,00,True)
     else:
       print("Date entry error")
       if latest.state == True:
@@ -57,13 +76,22 @@ def check_for_date_crossing(latest):
 
 def index(request):
   today_date = datetime.now().date()
+  week_number = today_date.isocalendar().week
   try:
     latest = TimeStamp.objects.latest('id')
     check_for_date_crossing(latest)
-    day_data, day_total = get_day_data(today_date)
-    context = {'latest': latest, 'today_date': today_date, 'day_data': day_data, 'day_total': ':'.join(str(day_total).split(':')[:2])}
   except:
-    context = {'latest': nan, 'today_date': today_date, 'day_data': [], 'day_total': '0:00'}
+    latest = 0
+  day_data, day_total = get_day_data(today_date)
+  week_data, week_total = get_week_data(week_number)
+  context = {
+    'latest': latest, 
+    'today_date': today_date, 
+    'week_number': week_number, 
+    'week_total': format_timedelta(week_total),
+    'day_data': day_data, 
+    'day_total': format_timedelta(day_total)
+  }
   return render(request, 'index.html', context)
 
 
@@ -81,11 +109,60 @@ def new_timestamp(request):
   return redirect('/')
 
 
-def custom_timestamp(request):
-  latest = TimeStamp.objects.latest('id')
-  current_time =  datetime.now().time()
-  timestamp = TimeStamp()
-  if latest.state == False:
-    timestamp.state = True
-  return redirect('/')
+def manual_timestamp(request):  
+  if request.method == "POST":
+    form = ManualEntry(request.POST)
+    if form.is_valid():
+      form_data = form.cleaned_data
+      data_to_save = form.save(commit=False)
+      try:
+        latest = TimeStamp.objects.latest('id')
+        check_for_date_crossing(latest)
+        if latest.state == False:
+          data_to_save.state = True
+      except:
+        data_to_save.state = False
+      data_to_save.save()
+      return redirect('/')
+  form = ManualEntry()
+  context = {'form': form}
+  return render(request, 'manual_timestamp.html', context)
 
+
+def show_week(request):
+  today_date = datetime.now().date()
+  week_number = today_date.isocalendar().week
+  week_data, week_total = get_week_data(week_number)
+  
+  context = {
+    'today_date': today_date, 
+    'week_number': week_number, 
+    'week_data': week_data,
+    'week_total': format_timedelta(week_total),
+  }
+  return render(request, 'week_view.html', context)
+
+
+def get_all_week_numbers():
+  this_year = datetime.now().date().year
+  all_data = TimeStamp.objects.filter(timestamp__year=this_year)
+  weeks = []
+  for data in all_data:
+    week_number = data.timestamp.date().isocalendar().week
+    if week_number not in weeks:
+      weeks.append(week_number)
+  return weeks, this_year
+
+
+def show_all_weeks(request):
+  week_numbers, this_year = get_all_week_numbers()
+  all_week_totals = []
+  for week_number in week_numbers:
+    week_data, week_total = get_week_data(week_number)
+    all_week_totals.append({'week_number': week_number, 'week_total': format_timedelta(week_total)})
+  
+  context = {
+    'year': this_year,
+    'week_data': all_week_totals,
+  }
+  return render(request, 'all_weeks_view.html', context)

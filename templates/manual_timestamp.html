@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="center">
+    <h1 class="header">Manuel indtastning</h1>
+</div>
+
+<div class="center">
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+    <button type="submit" class="gem-button">Gem</button>
+    </form>
+</div>
+
+{% endblock %}

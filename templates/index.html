@@ -5,17 +5,19 @@
 {% block content %}
 
 
-<div class="center">
+<div class="center margintop">
   <form method="POST" action=".">
     {% csrf_token %}
     <div class="btn-group">
       <a href="{% url 'take_timestamp' %}" class="button">{% if latest.state == True %} STOP {% else %} START {% endif %} </a>
     </div>
   </form>
-  <div><a href="">manuel</a></div>
+  <div><a href="{% url 'manual_timestamp' %}">manuel</a></div>
+  
   <br>
 
-  <span><h3>{{ today_date }}</h3></span>
+  <h4 class="header">Uge {{ week_number }}</h4>
+  <h3 class="header">{{ today_date }}</h3>  
 
   <div class="tablediv">
     <table class="fixed">
@@ -39,11 +41,9 @@
     {% endfor %}
     </table>
     <br>
-    <span><h3>Dagstotal {{ day_total }}</h3></span>
   </div>
-
-
-  <button>Exporter</button>
+  <h3 class="header">Dagstotal {{ day_total }}</h3>
+  <h3 class="header"><a href="{% url 'show_week' %}">Ugetotal {{ week_total }}</a></h3>
 </div>
 
 {% endblock %}
