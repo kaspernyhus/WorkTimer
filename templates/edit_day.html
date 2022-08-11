@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+
+<div class="center margintop">
+  <h2 class="header">Rediger dag</h2>
+  <h3 class="header">{{ today_date|date:'d/m/y' }}</h3>  
+
+  <div class="tablediv">
+    <table class="fixed">
+      <tr>
+        <th>Start</th>
+        <th>Stop</th>
+        <th>Varighed</th>
+        <th></th>
+      </tr>
+      {% for data in day_data %}
+      <tr>
+        <td>
+          <a href="{% url 'edit_entry' data.ids.0 %}">{{ data.start|date:'H:i' }}</a>
+        </td>
+        <td>
+          <a href="{% url 'edit_entry' data.ids.1 %}">{{ data.end|date:'H:i' }}</a>
+        </td>
+        <td>
+          {{ data.dur }}
+        </td>
+        <td>
+          <a href="{% url 'delete' data.ids %}">slet</a>
+        </td>
+      </tr>
+    {% endfor %}
+    </table>
+    <br>
+  </div>
+  
+  <div class="center">
+    <a href="{% url 'index' %}" class="sml-button">Tilbage</a>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

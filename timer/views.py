@@ -23,11 +23,12 @@ def get_quote_info(quote):
     start_index = 0
   for index in range(start_index,len(quote),2):
     try:
+      ids = (quote[index].id, quote[index+1].id)
       start = quote[index].timestamp
       end = quote[index+1].timestamp
       dur = end-start
       total = total + dur
-      day_data.append({'start': start, 'end': end, 'dur': ':'.join(str(dur).split(':')[:2])})
+      day_data.append({'ids': ids, 'start': start, 'end': end, 'dur': ':'.join(str(dur).split(':')[:2])})
     except Exception as e:
       print("!!!! Error getting interval data !!!!", e)
   return day_data, total
@@ -129,6 +130,50 @@ def manual_timestamp(request):
   return render(request, 'manual_timestamp.html', context)
 
 
+def edit_day(request):
+  today_date = datetime.now().date()
+  day_data, day_total = get_day_data(today_date)
+  context = {
+    'today_date': today_date, 
+    'day_data': day_data, 
+    'day_total': format_timedelta(day_total)
+  }
+  return render(request, 'edit_day.html', context)
+
+
+def delete_entry_pair(request, ids):
+  IDs = eval(ids)
+  first_id = IDs[0]
+  second_id = IDs[1]
+  try:
+    time1 = TimeStamp.objects.get(id=first_id)
+    time2 = TimeStamp.objects.get(id=second_id)
+    time1.delete()
+    time2.delete()
+    print("Deleted entries")
+  except:
+    print("Error getting first entry")
+  return redirect('/edit_day')
+
+
+def edit_entry(request, id):
+  if request.method == "POST":
+    form = ManualEntry(request.POST)
+    if form.is_valid():
+      form_data = form.cleaned_data
+      entry = TimeStamp.objects.get(id=id)
+      entry.timestamp = form_data['timestamp']
+      entry.save()
+      return redirect('/edit_day')
+
+  entry = TimeStamp.objects.get(id=id)
+  form = ManualEntry(initial={
+    'timestamp': entry.timestamp
+  })
+  context = {'form': form}
+  return render(request, 'manual_timestamp.html', context)
+
+
 def show_week(request):
   today_date = datetime.now().date()
   week_number = today_date.isocalendar().week
@@ -166,4 +211,3 @@ def show_all_weeks(request):
     'week_data': all_week_totals,
   }
   return render(request, 'all_weeks_view.html', context)
-  
