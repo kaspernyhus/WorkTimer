@@ -9,7 +9,7 @@
   <form method="POST" action=".">
     {% csrf_token %}
     <div class="btn-group">
-      <a href="{% url 'take_timestamp' %}" class="button">{% if latest.state == True %} STOP {% else %} START {% endif %} </a>
+      <a href="{% url 'take_timestamp' %}" class="button">{% if latest.state == True %} STOP <p class="sub-text">{{ dur }}</p> {% else %} START {% endif %} </a>
     </div>
   </form>
   <div><a href="{% url 'manual_timestamp' %}">manuel</a></div>

@@ -15,7 +15,7 @@ def get_quote_info(quote):
   total = timedelta(0,0,0)
   # No data in quote
   if not quote:
-    return [{'start': 0, 'end': 0, 'dur': 0}], 0
+    return [{'ids': (0, 0), 'start': 0, 'end': 0, 'dur': 0}], 0
   # Quote must start with state True
   if quote[0].state == False:
     start_index = 1
@@ -42,6 +42,29 @@ def get_day_data(date):
 def get_week_data(week_number):
   week_quary = TimeStamp.objects.filter(timestamp__week=week_number)
   return get_quote_info(week_quary)
+
+
+def get_all_week_numbers():
+  this_year = datetime.now().date().year
+  all_data = TimeStamp.objects.filter(timestamp__year=this_year)
+  weeks = []
+  for data in all_data:
+    week_number = data.timestamp.date().isocalendar().week
+    if week_number not in weeks:
+      weeks.append(week_number)
+  return weeks, this_year
+
+
+def get_all_days():
+  this_year = datetime.now().date().year
+  all_data = TimeStamp.objects.filter(timestamp__year=this_year)
+  days = []
+  for data in all_data:
+    date = data.timestamp.date()
+    if date not in days:
+      days.append(date)
+  days.reverse()
+  return days, this_year
 
 
 def insert_entry(year, month, day, hour, minute, second, state):
@@ -76,23 +99,26 @@ def check_for_date_crossing(latest):
 
 
 def index(request):
+  now = datetime.now()
   today_date = datetime.now().date()
   week_number = today_date.isocalendar().week
   try:
     latest = TimeStamp.objects.latest('id')
     check_for_date_crossing(latest)
+    dur = now - latest.timestamp
   except:
     latest = 0
+    dur = '0:00'
   day_data, day_total = get_day_data(today_date)
   week_data, week_total = get_week_data(week_number)
   context = {
-    'latest': latest, 
+    'latest': latest,
+    'dur': format_timedelta(dur),
     'today_date': today_date, 
     'week_number': week_number, 
     'week_total': format_timedelta(week_total),
     'day_data': day_data, 
-    'day_total': format_timedelta(day_total)
-  }
+    'day_total': format_timedelta(day_total)}
   return render(request, 'index.html', context)
 
 
@@ -136,12 +162,24 @@ def edit_day(request):
   context = {
     'today_date': today_date, 
     'day_data': day_data, 
-    'day_total': format_timedelta(day_total)
-  }
+    'day_total': format_timedelta(day_total)}
   return render(request, 'edit_day.html', context)
 
 
+def edit_all_days(request):
+  days, this_year = get_all_days()
+  days_data = []
+  for day in days:
+    day_data, day_total = get_day_data(day)
+    days_data.append({'day_data': day_data, 'day_total': format_timedelta(day_total)})
+  context = {
+    'days_data': days_data, 
+    'this_year': this_year}
+  return render(request, 'edit_all_days.html', context)
+
+
 def delete_entry_pair(request, ids):
+  redirect_to = request.META.get('HTTP_REFERER')
   IDs = eval(ids)
   first_id = IDs[0]
   second_id = IDs[1]
@@ -153,23 +191,21 @@ def delete_entry_pair(request, ids):
     print("Deleted entries")
   except:
     print("Error getting first entry")
-  return redirect('/edit_day')
+  return redirect(redirect_to)
 
 
 def edit_entry(request, id):
   if request.method == "POST":
+    redirect_to = request.GET.get('next', '/edit_day')
     form = ManualEntry(request.POST)
     if form.is_valid():
       form_data = form.cleaned_data
       entry = TimeStamp.objects.get(id=id)
       entry.timestamp = form_data['timestamp']
       entry.save()
-      return redirect('/edit_day')
-
+      return redirect(redirect_to)
   entry = TimeStamp.objects.get(id=id)
-  form = ManualEntry(initial={
-    'timestamp': entry.timestamp
-  })
+  form = ManualEntry(initial={'timestamp': entry.timestamp})
   context = {'form': form}
   return render(request, 'manual_timestamp.html', context)
 
@@ -178,25 +214,12 @@ def show_week(request):
   today_date = datetime.now().date()
   week_number = today_date.isocalendar().week
   week_data, week_total = get_week_data(week_number)
-  
   context = {
     'today_date': today_date, 
     'week_number': week_number, 
     'week_data': week_data,
-    'week_total': format_timedelta(week_total),
-  }
+    'week_total': format_timedelta(week_total)}
   return render(request, 'week_view.html', context)
-
-
-def get_all_week_numbers():
-  this_year = datetime.now().date().year
-  all_data = TimeStamp.objects.filter(timestamp__year=this_year)
-  weeks = []
-  for data in all_data:
-    week_number = data.timestamp.date().isocalendar().week
-    if week_number not in weeks:
-      weeks.append(week_number)
-  return weeks, this_year
 
 
 def show_all_weeks(request):
@@ -205,9 +228,7 @@ def show_all_weeks(request):
   for week_number in week_numbers:
     week_data, week_total = get_week_data(week_number)
     all_week_totals.append({'week_number': week_number, 'week_total': format_timedelta(week_total)})
-  
   context = {
     'year': this_year,
-    'week_data': all_week_totals,
-  }
+    'week_data': all_week_totals}
   return render(request, 'all_weeks_view.html', context)
