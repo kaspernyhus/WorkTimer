@@ -31,6 +31,9 @@ def get_quote_info(quote):
       day_data.append({'ids': ids, 'start': start, 'end': end, 'dur': ':'.join(str(dur).split(':')[:2])})
     except Exception as e:
       print("!!!! Error getting interval data !!!!", e)
+  # Format to XX:XX:XX
+  total_seconds =  total.total_seconds()
+  total = '%d:%02d:%02d' % (total_seconds / 3600, total_seconds / 60 % 60, total_seconds % 60)
   return day_data, total
 
 
@@ -111,6 +114,7 @@ def index(request):
     dur = '0:00'
   day_data, day_total = get_day_data(today_date)
   week_data, week_total = get_week_data(week_number)
+  print("-----", week_total)
   context = {
     'latest': latest,
     'dur': format_timedelta(dur),
