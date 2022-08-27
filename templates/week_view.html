@@ -9,27 +9,25 @@
   <h2 class="header">Uge {{ week_number }}</h2>
   
   <div class="tablediv">
+    {% for day in days_data %}
     <table class="fixed">
+      <h3 class="header">{{ day.day_data.0.day_name }} {{ day.day_data.0.start|date:'d/m/y' }}</h3> 
       <tr>
         <th>Start</th>
         <th>Stop</th>
         <th>Varighed</th>
       </tr>
-      {% for data in week_data %}
+      {% for time in day.day_data %}
       <tr>
-        <td>
-          {{ data.start|date:'d/m/y H:i' }}
-        </td>
-        <td>
-          {{ data.end|date:'d/m/y H:i' }}
-        </td>
-        <td>
-          {{ data.dur }}
-        </td>
+        <td>{{ time.start|date:'H:i' }}</td>
+        <td>{{ time.start|date:'H:i' }}</td>
+        <td>{{ time.dur }}</td>
       </tr>
-    {% endfor %}
+      {% endfor %}
     </table>
+    <h5 class="header">Dagstotal {{ day.day_total }}</h5>
     <br>
+    {% endfor %}
   </div>
   <h3 class="header">Ugetotal {{ week_total }}</h3>
 </div>

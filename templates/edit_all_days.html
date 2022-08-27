@@ -11,8 +11,7 @@
   <div class="tablediv">
     {% for day in days_data %}
     <table class="fixed">
-
-      <h3 class="header">{{ day.day_data.0.start|date:'d/m/y' }}</h3> 
+      <h3 class="header">{{ day.day_data.0.day_name }} {{ day.day_data.0.start|date:'d/m/y' }}</h3> 
       <tr>
         <th>Start</th>
         <th>Stop</th>
@@ -27,7 +26,6 @@
         <td><a href="{% url 'delete' time.ids %}?next={{ request.path|urlencode }}">slet</a></td>
       </tr>
       {% endfor %}
-      
     </table>
     <h5 class="header">Dagstotal {{ day.day_total }}</h5>
     <br>

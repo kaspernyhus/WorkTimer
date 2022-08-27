@@ -5,9 +5,33 @@ from .models import *
 from .forms import ManualEntry
 from datetime import datetime, timedelta
 
+from django.utils.formats import date_format
+from django.utils import translation
+from datetime import date
+
 
 def format_timedelta(time):
   return ':'.join(str(time).split(':')[:2])
+
+
+def get_day_name(day):
+  if day == 'Monday':
+    return 'Mandag'
+  elif day ==  'Tuesday':
+    return 'Tirsdag'
+  elif day ==  'Wednesday':
+    return 'Onsdag'
+  elif day ==  'Thursday':
+    return 'Torsdag'
+  elif day ==  'Friday':
+    return 'Fredag'
+  elif day ==  'Saturday':
+    return 'Lørdag'
+  elif day ==  'Sunday':
+    return 'Søndag'
+  else:
+    print("ERROR: weekname not found")
+    return ""
 
 
 def get_quote_info(quote):
@@ -15,7 +39,7 @@ def get_quote_info(quote):
   total = timedelta(0,0,0)
   # No data in quote
   if not quote:
-    return [{'ids': (0, 0), 'start': 0, 'end': 0, 'dur': 0}], 0
+    return [{'ids': (0, 0), 'start': 0, 'end': 0, 'dur': '0:00'}], '0:00'
   # Quote must start with state True
   if quote[0].state == False:
     start_index = 1
@@ -28,7 +52,7 @@ def get_quote_info(quote):
       end = quote[index+1].timestamp
       dur = end-start
       total = total + dur
-      day_data.append({'ids': ids, 'start': start, 'end': end, 'dur': ':'.join(str(dur).split(':')[:2])})
+      day_data.append({'ids': ids, 'start': start, 'end': end, 'dur': ':'.join(str(dur).split(':')[:2]), "day_name": get_day_name(start.strftime("%A"))})
     except Exception as e:
       print("!!!! Error getting interval data !!!!", e)
   # Format to XX:XX:XX
@@ -44,7 +68,17 @@ def get_day_data(date):
 
 def get_week_data(week_number):
   week_quary = TimeStamp.objects.filter(timestamp__week=week_number)
-  return get_quote_info(week_quary)
+  week_data, week_total = get_quote_info(week_quary)
+  days = []
+  for day in week_data:
+    if day['start'].date() not in days:
+      days.append(day['start'].date())
+  days.reverse()
+  days_data = []
+  for day in days:
+    day_data, day_total = get_day_data(day)
+    days_data.append({'day_data': day_data, 'day_total': format_timedelta(day_total)})
+  return days_data, week_total
 
 
 def get_all_week_numbers():
@@ -114,7 +148,6 @@ def index(request):
     dur = '0:00'
   day_data, day_total = get_day_data(today_date)
   week_data, week_total = get_week_data(week_number)
-  print("-----", week_total)
   context = {
     'latest': latest,
     'dur': format_timedelta(dur),
@@ -178,7 +211,7 @@ def edit_all_days(request):
     days_data.append({'day_data': day_data, 'day_total': format_timedelta(day_total)})
   context = {
     'days_data': days_data, 
-    'this_year': this_year}
+    'this_year': this_year }
   return render(request, 'edit_all_days.html', context)
 
 
@@ -217,11 +250,11 @@ def edit_entry(request, id):
 def show_week(request):
   today_date = datetime.now().date()
   week_number = today_date.isocalendar().week
-  week_data, week_total = get_week_data(week_number)
+  days_data, week_total = get_week_data(week_number)
   context = {
-    'today_date': today_date, 
-    'week_number': week_number, 
-    'week_data': week_data,
+    'today_date': today_date,
+    'week_number': week_number,
+    'days_data': days_data,
     'week_total': format_timedelta(week_total)}
   return render(request, 'week_view.html', context)
 
@@ -230,7 +263,7 @@ def show_all_weeks(request):
   week_numbers, this_year = get_all_week_numbers()
   all_week_totals = []
   for week_number in week_numbers:
-    week_data, week_total = get_week_data(week_number)
+    days_data, week_total = get_week_data(week_number)
     all_week_totals.append({'week_number': week_number, 'week_total': format_timedelta(week_total)})
   context = {
     'year': this_year,
