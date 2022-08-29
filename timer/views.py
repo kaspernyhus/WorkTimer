@@ -71,8 +71,11 @@ def get_week_data(week_number):
   week_data, week_total = get_quote_info(week_quary)
   days = []
   for day in week_data:
-    if day['start'].date() not in days:
-      days.append(day['start'].date())
+    try:
+      if day['start'].date() not in days:
+        days.append(day['start'].date())
+    except AttributeError:
+      pass
   days.reverse()
   days_data = []
   for day in days:
