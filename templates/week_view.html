@@ -20,7 +20,7 @@
       {% for time in day.day_data %}
       <tr>
         <td>{{ time.start|date:'H:i' }}</td>
-        <td>{{ time.start|date:'H:i' }}</td>
+        <td>{{ time.end|date:'H:i' }}</td>
         <td>{{ time.dur }}</td>
       </tr>
       {% endfor %}
