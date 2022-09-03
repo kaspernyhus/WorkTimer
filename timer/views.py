@@ -292,10 +292,15 @@ def show_all_weeks(request):
 
 def get_accumulated_margin():
   week_numbers, this_year = get_all_week_numbers()
+  this_week = datetime.now().date().isocalendar().week
   all_week_totals = []
   accumulated_margin = 0
   for week_number in week_numbers:
     days_data, week_total = get_week_data(week_number)
     week_margin = week_total.total_seconds() - timedelta(0,0,0,0,0,15).total_seconds()
-    accumulated_margin += week_margin
+    if week_number != this_week:
+      accumulated_margin += week_margin
+    else:  # only include this weeks hours if more than the 15 hours
+      if week_total.total_seconds() > timedelta(0,0,0,0,0,15).total_seconds():
+        accumulated_margin += week_margin
   return format_total_seconds(accumulated_margin)
