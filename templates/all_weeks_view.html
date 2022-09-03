@@ -12,6 +12,8 @@
       <tr>
         <th>Uge</th>
         <th>total</th>
+        <th>+-</th>
+        <th>Akkum</th>
       </tr>
       {% for data in week_data %}
       <tr>
@@ -20,6 +22,12 @@
         </td>
         <td>
           {{ data.week_total }}
+        </td>
+        <td {% if data.week_margin.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}>
+          {{ data.week_margin }}
+        </td>
+        <td {% if data.accumulated_margin.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}>
+          {{ data.accumulated_margin }}
         </td>
       </tr>
     {% endfor %}

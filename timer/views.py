@@ -11,7 +11,16 @@ from datetime import date
 
 
 def format_timedelta(time):
-  return ':'.join(str(time).split(':')[:2])
+  total_seconds =  time.total_seconds()
+  return '%d:%02d' % (total_seconds / 3600, total_seconds / 60 % 60)
+
+
+def format_total_seconds(total_seconds):
+  if total_seconds < 0:
+    total_seconds = abs(total_seconds)
+    return '-%d:%02d' % (total_seconds / 3600, total_seconds / 60 % 60)
+  else:
+    return '%d:%02d' % (total_seconds / 3600, total_seconds / 60 % 60)
 
 
 def get_day_name(day):
@@ -39,7 +48,7 @@ def get_quote_info(quote):
   total = timedelta(0,0,0)
   # No data in quote
   if not quote:
-    return [{'ids': (0, 0), 'start': 0, 'end': 0, 'dur': '0:00'}], '0:00'
+    return [{'ids': (0, 0), 'start': 0, 'end': 0, 'dur': '0:00'}], timedelta(0,0,0)
   # Quote must start with state True
   if quote[0].state == False:
     start_index = 1
@@ -55,9 +64,6 @@ def get_quote_info(quote):
       day_data.append({'ids': ids, 'start': start, 'end': end, 'dur': ':'.join(str(dur).split(':')[:2]), "day_name": get_day_name(start.strftime("%A"))})
     except Exception as e:
       print("!!!! Error getting interval data !!!!", e)
-  # Format to XX:XX:XX
-  total_seconds =  total.total_seconds()
-  total = '%d:%02d:%02d' % (total_seconds / 3600, total_seconds / 60 % 60, total_seconds % 60)
   return day_data, total
 
 
@@ -158,7 +164,9 @@ def index(request):
     'week_number': week_number, 
     'week_total': format_timedelta(week_total),
     'day_data': day_data, 
-    'day_total': format_timedelta(day_total)}
+    'day_total': format_timedelta(day_total),
+    'acc_margin': get_accumulated_margin()
+    }
   return render(request, 'index.html', context)
 
 
@@ -265,10 +273,29 @@ def show_week(request):
 def show_all_weeks(request):
   week_numbers, this_year = get_all_week_numbers()
   all_week_totals = []
+  accumulated_margin = 0
   for week_number in week_numbers:
     days_data, week_total = get_week_data(week_number)
-    all_week_totals.append({'week_number': week_number, 'week_total': format_timedelta(week_total)})
+    week_margin = week_total.total_seconds() - timedelta(0,0,0,0,0,15).total_seconds()
+    accumulated_margin += week_margin
+    all_week_totals.append({
+        'week_number': week_number, 
+        'week_total': format_timedelta(week_total), 
+        'week_margin': format_total_seconds(week_margin), 
+        'accumulated_margin': format_total_seconds(accumulated_margin)
+        })
   context = {
     'year': this_year,
     'week_data': all_week_totals}
   return render(request, 'all_weeks_view.html', context)
+
+
+def get_accumulated_margin():
+  week_numbers, this_year = get_all_week_numbers()
+  all_week_totals = []
+  accumulated_margin = 0
+  for week_number in week_numbers:
+    days_data, week_total = get_week_data(week_number)
+    week_margin = week_total.total_seconds() - timedelta(0,0,0,0,0,15).total_seconds()
+    accumulated_margin += week_margin
+  return format_total_seconds(accumulated_margin)

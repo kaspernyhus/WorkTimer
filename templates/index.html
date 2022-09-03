@@ -45,6 +45,12 @@
   </div>
   <h3 class="header">Dagstotal {{ day_total }}</h3>
   <h3 class="header"><a href="{% url 'show_week' %}">Ugetotal {{ week_total }}</a></h3>
+
+  <div class="center">
+      <p class="sub-text">Akkumuleret</p>
+      <p class="sub-text" {% if acc_margin.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}>{{ acc_margin }}</p>
+  </div>
+
 </div>
 
 {% endblock %}
