@@ -157,6 +157,7 @@ def index(request):
     dur = '0:00'
   day_data, day_total = get_day_data(today_date)
   week_data, week_total = get_week_data(week_number)
+  week_diff = get_week_diff(week_total)
   context = {
     'latest': latest,
     'dur': format_timedelta(dur),
@@ -165,6 +166,7 @@ def index(request):
     'week_total': format_timedelta(week_total),
     'day_data': day_data, 
     'day_total': format_timedelta(day_total),
+    'week_diff': format_total_seconds(week_diff),
     'acc_margin': get_accumulated_margin()
     }
   return render(request, 'index.html', context)
@@ -258,16 +260,19 @@ def edit_entry(request, id):
   return render(request, 'manual_timestamp.html', context)
 
 
-def show_week(request):
-  today_date = datetime.now().date()
-  week_number = today_date.isocalendar().week
+def show_week(request, week_number):
+  # today_date = datetime.now().date()
+  # week_number = today_date.isocalendar().week
   days_data, week_total = get_week_data(week_number)
   context = {
-    'today_date': today_date,
     'week_number': week_number,
     'days_data': days_data,
     'week_total': format_timedelta(week_total)}
   return render(request, 'week_view.html', context)
+
+
+def get_week_diff(week_total):
+  return week_total.total_seconds() - timedelta(0,0,0,0,0,15).total_seconds()
 
 
 def show_all_weeks(request):
@@ -276,12 +281,12 @@ def show_all_weeks(request):
   accumulated_margin = 0
   for week_number in week_numbers:
     days_data, week_total = get_week_data(week_number)
-    week_margin = week_total.total_seconds() - timedelta(0,0,0,0,0,15).total_seconds()
-    accumulated_margin += week_margin
+    week_diff = get_week_diff(week_total)
+    accumulated_margin += week_diff
     all_week_totals.append({
         'week_number': week_number, 
         'week_total': format_timedelta(week_total), 
-        'week_margin': format_total_seconds(week_margin), 
+        'week_diff': format_total_seconds(week_diff), 
         'accumulated_margin': format_total_seconds(accumulated_margin)
         })
   context = {

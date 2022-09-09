@@ -18,13 +18,13 @@
       {% for data in week_data %}
       <tr>
         <td>
-          {{ data.week_number }}
+          <a href="{% url 'show_week' data.week_number %}">{{ data.week_number }}</a>
         </td>
         <td>
           {{ data.week_total }}
         </td>
-        <td {% if data.week_margin.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}>
-          {{ data.week_margin }}
+        <td {% if data.week_diff.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}>
+          {{ data.week_diff }}
         </td>
         <td {% if data.accumulated_margin.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}>
           {{ data.accumulated_margin }}

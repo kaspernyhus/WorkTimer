@@ -6,7 +6,9 @@
 
 
 <div class="center margintop">
-  <h2 class="header">Uge {{ week_number }}</h2>
+  <a href="{% url 'show_all_weeks' %}">
+    <h2 class="header">Uge {{ week_number }}</h2>
+  </a>
   
   <div class="tablediv">
     {% for day in days_data %}

@@ -44,12 +44,14 @@
     <br>
   </div>
   <h3 class="header">Dagstotal {{ day_total }}</h3>
-  <h3 class="header"><a href="{% url 'show_week' %}">Ugetotal {{ week_total }}</a></h3>
+  <h3 class="header"><a href="{% url 'show_week' week_number %}">Ugetotal {{ week_total }}</a></h3>
 
   <a href="{% url 'show_all_weeks' %}" class="">
     <div class="center">
-      <p class="sub-text">Akkumuleret</p>
-      <p class="sub-text" {% if acc_margin.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}>{{ acc_margin }}</p>
+      <p class="sub-text">
+        <span {% if week_diff.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}> {{ week_diff }} </span> / 
+        <span {% if acc_margin.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}>{{ acc_margin }}</span>
+      </p>
     </div>
   </a>
 
