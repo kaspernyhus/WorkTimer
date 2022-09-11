@@ -48,7 +48,7 @@ def get_quote_info(quote):
   total = timedelta(0,0,0)
   # No data in quote
   if not quote:
-    return [{'ids': (0, 0), 'start': 0, 'end': 0, 'dur': '0:00'}], timedelta(0,0,0)
+    return day_data, total
   # Quote must start with state True
   if quote[0].state == False:
     start_index = 1
