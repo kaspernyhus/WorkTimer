@@ -72,7 +72,7 @@ def get_day_data(date):
   return get_quote_info(day_quote)
 
 
-def get_week_data(week_number):
+def get_week_data(week_number, reverse=True):
   week_quary = TimeStamp.objects.filter(timestamp__week=week_number)
   week_data, week_total = get_quote_info(week_quary)
   days = []
@@ -82,7 +82,8 @@ def get_week_data(week_number):
         days.append(day['start'].date())
     except AttributeError:
       pass
-  days.reverse()
+  if reverse:
+    days.reverse()
   days_data = []
   for day in days:
     day_data, day_total = get_day_data(day)
@@ -261,9 +262,13 @@ def edit_entry(request, id):
 
 
 def show_week(request, week_number):
-  # today_date = datetime.now().date()
-  # week_number = today_date.isocalendar().week
-  days_data, week_total = get_week_data(week_number)
+  reverse = True
+  if request.method == "GET":
+    reverse_param = request.GET.get('reverse')
+    if reverse_param == 'false':
+      reverse = False
+  print("reverse",reverse)
+  days_data, week_total = get_week_data(week_number, reverse)
   context = {
     'week_number': week_number,
     'days_data': days_data,

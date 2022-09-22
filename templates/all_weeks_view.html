@@ -18,7 +18,7 @@
       {% for data in week_data %}
       <tr>
         <td>
-          <a href="{% url 'show_week' data.week_number %}">{{ data.week_number }}</a>
+          <a href="{% url 'show_week' data.week_number %}?reverse=false">{{ data.week_number }}</a>
         </td>
         <td>
           {{ data.week_total }}
