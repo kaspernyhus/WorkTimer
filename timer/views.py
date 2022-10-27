@@ -87,6 +87,7 @@ def get_week_data(week_number, reverse=True):
   days_data = []
   for day in days:
     day_data, day_total = get_day_data(day)
+    # print(day_data, day_total)
     days_data.append({'day_data': day_data, 'day_total': format_timedelta(day_total)})
   return days_data, week_total
 
