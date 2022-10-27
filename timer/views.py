@@ -67,7 +67,7 @@ def get_quote_info(quote):
   return day_data, total
 
 
-def get_day_data(date): 
+def get_day_data(date):
   day_quote = TimeStamp.objects.filter(timestamp__date=date)
   return get_quote_info(day_quote)
 
@@ -162,10 +162,10 @@ def index(request):
   context = {
     'latest': latest,
     'dur': format_timedelta(dur),
-    'today_date': today_date, 
-    'week_number': week_number, 
+    'today_date': today_date,
+    'week_number': week_number,
     'week_total': format_timedelta(week_total),
-    'day_data': day_data, 
+    'day_data': day_data,
     'day_total': format_timedelta(day_total),
     'week_diff': format_total_seconds(week_diff),
     'acc_margin': get_accumulated_margin()
@@ -187,7 +187,7 @@ def new_timestamp(request):
   return redirect('/')
 
 
-def manual_timestamp(request):  
+def manual_timestamp(request):
   if request.method == "POST":
     form = ManualEntry(request.POST)
     if form.is_valid():
@@ -211,8 +211,8 @@ def edit_day(request):
   today_date = datetime.now().date()
   day_data, day_total = get_day_data(today_date)
   context = {
-    'today_date': today_date, 
-    'day_data': day_data, 
+    'today_date': today_date,
+    'day_data': day_data,
     'day_total': format_timedelta(day_total)}
   return render(request, 'edit_day.html', context)
 
@@ -224,7 +224,7 @@ def edit_all_days(request):
     day_data, day_total = get_day_data(day)
     days_data.append({'day_data': day_data, 'day_total': format_timedelta(day_total)})
   context = {
-    'days_data': days_data, 
+    'days_data': days_data,
     'this_year': this_year }
   return render(request, 'edit_all_days.html', context)
 
@@ -267,7 +267,6 @@ def show_week(request, week_number):
     reverse_param = request.GET.get('reverse')
     if reverse_param == 'false':
       reverse = False
-  print("reverse",reverse)
   days_data, week_total = get_week_data(week_number, reverse)
   context = {
     'week_number': week_number,
@@ -289,9 +288,9 @@ def show_all_weeks(request):
     week_diff = get_week_diff(week_total)
     accumulated_margin += week_diff
     all_week_totals.append({
-        'week_number': week_number, 
-        'week_total': format_timedelta(week_total), 
-        'week_diff': format_total_seconds(week_diff), 
+        'week_number': week_number,
+        'week_total': format_timedelta(week_total),
+        'week_diff': format_total_seconds(week_diff),
         'accumulated_margin': format_total_seconds(accumulated_margin)
         })
   context = {
@@ -314,3 +313,21 @@ def get_accumulated_margin():
       if week_total.total_seconds() > timedelta(0,0,0,0,0,15).total_seconds():
         accumulated_margin += week_margin
   return format_total_seconds(accumulated_margin)
+
+
+def show_overview(request):
+  week_numbers, this_year = get_all_week_numbers()
+  all_week_totals = []
+  all_days = []
+  accumulated_margin = 0
+  for week_number in week_numbers:
+    days_data, week_total = get_week_data(week_number, reverse=False)
+    all_week_totals.append({
+        'week_number': week_number,
+        'week_total': format_timedelta(week_total)
+        })
+    all_days.append(days_data)
+  context = {
+    'all_week_totals': all_week_totals,
+    'days_data': all_days}
+  return render(request, 'overview.html', context)

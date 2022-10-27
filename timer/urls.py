@@ -11,5 +11,6 @@ urlpatterns = [
     path('delete/<str:ids>', views.delete_entry_pair, name='delete'),
     path('week/<int:week_number>', views.show_week, name='show_week'),
     path('all_weeks', views.show_all_weeks, name='show_all_weeks'),
+    path('overview', views.show_overview, name='show_overview'),
 
   ]
