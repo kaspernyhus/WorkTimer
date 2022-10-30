@@ -18,7 +18,7 @@
     <h3 class="header">Alle dage</h3>
     {% for week in days_data %}
         {% for day in week %}
-            <p style="margin: 0px;">{{ day.day_data.0.day_name }} {{ day.day_data.0.start|date:'d/m/y' }} dagstotal: {{ day.day_data.0.dur }}</p>
+            <p style="margin: 0px;">{{ day.day_data.0.day_name }} {{ day.day_data.0.start|date:'d/m/y' }} dagstotal: {{ day.day_total }}</p>
         {% endfor %}
     <br>
     {% endfor %}
