@@ -8,6 +8,14 @@
     <a href="{% url 'show_all_weeks' %}">
       <h2 class="header">Overblik</h2>
     </a>
+
+    <h3 class="header">Måneder</h3>
+    {% for month in months_totals %}
+    <p style="margin: 0px;">{{ month.month }} samlet arbejdstid: {{ month.total }}</p>
+    {% endfor %}
+
+    <br>
+
     <h3 class="header">Uger</h3>
     {% for week in all_week_totals %}
     <p style="margin: 0px;">Uge {{ week.week_number }} samlet arbejdstid: {{ week.week_total }}</p>

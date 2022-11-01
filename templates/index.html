@@ -13,11 +13,11 @@
     </div>
   </form>
   <div><a href="{% url 'manual_timestamp' %}">manuel</a></div>
-  
+
   <br>
 
   <h4 class="header">Uge {{ week_number }}</h4>
-  <h3 class="header">{{ today_date|date:'d/m/y' }}</h3>  
+  <h3 class="header">{{ today_date|date:'d/m/y' }}</h3>
 
   <div class="tablediv">
     <table class="fixed">
@@ -45,15 +45,16 @@
   </div>
   <h3 class="header">Dagstotal {{ day_total }}</h3>
   <h3 class="header"><a href="{% url 'show_week' week_number %}">Ugetotal {{ week_total }}</a></h3>
+  <p class="header"><a href="{% url 'show_all_weeks' %}">Månedstotal {{ month_total }}</a></p>
 
-  <a href="{% url 'show_all_weeks' %}" class="">
+  <!-- <a href="{% url 'show_all_weeks' %}" class="">
     <div class="center">
       <p class="sub-text">
-        <span {% if week_diff.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}> {{ week_diff }} </span> / 
+        <span {% if week_diff.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}> {{ week_diff }} </span> /
         <span {% if acc_margin.0 == "-" %} style="color: red;" {% else %} style="color: green;" {% endif %}>{{ acc_margin }}</span>
       </p>
     </div>
-  </a>
+  </a> -->
 
 </div>
 

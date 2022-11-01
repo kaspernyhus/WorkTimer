@@ -1,3 +1,4 @@
+from calendar import month, week
 from cmath import nan
 from time import time
 from django.shortcuts import render, redirect
@@ -43,6 +44,36 @@ def get_day_name(day):
     return ""
 
 
+def get_month_name(month):
+  if month == 1:
+    return 'Januar'
+  if month == 2:
+    return 'Februar'
+  if month == 3:
+    return 'Marts'
+  if month == 4:
+    return 'April'
+  if month == 5:
+    return 'Maj'
+  if month == 6:
+    return 'Juni'
+  if month == 7:
+    return 'Juli'
+  if month == 8:
+    return 'August'
+  if month == 9:
+    return 'September'
+  if month == 10:
+    return 'Oktober'
+  if month == 11:
+    return 'November'
+  if month == 12:
+    return 'December'
+  else:
+    print("ERROR: month not found")
+    return ""
+
+
 def get_quote_info(quote):
   day_data = []
   total = timedelta(0,0,0)
@@ -61,7 +92,13 @@ def get_quote_info(quote):
       end = quote[index+1].timestamp
       dur = end-start
       total = total + dur
-      day_data.append({'ids': ids, 'start': start, 'end': end, 'dur': ':'.join(str(dur).split(':')[:2]), "day_name": get_day_name(start.strftime("%A"))})
+      day_data.append({
+        'ids': ids,
+        'start': start,
+        'end': end,
+        'dur': ':'.join(str(dur).split(':')[:2]),
+        'day_name': get_day_name(start.strftime("%A"))
+        })
     except Exception as e:
       print("!!!! Error getting interval data !!!!", e)
   return day_data, total
@@ -87,20 +124,28 @@ def get_week_data(week_number, reverse=True):
   days_data = []
   for day in days:
     day_data, day_total = get_day_data(day)
-    # print(day_data, day_total)
     days_data.append({'day_data': day_data, 'day_total': format_timedelta(day_total)})
   return days_data, week_total
 
 
-def get_all_week_numbers():
+def get_month_data(month):
+  month_query = TimeStamp.objects.filter(timestamp__month=month)
+  return get_quote_info(month_query)
+
+
+def get_years_active_period():
   this_year = datetime.now().date().year
   all_data = TimeStamp.objects.filter(timestamp__year=this_year)
   weeks = []
+  months = []
   for data in all_data:
     week_number = data.timestamp.date().isocalendar().week
+    month_number = data.timestamp.date().month
     if week_number not in weeks:
       weeks.append(week_number)
-  return weeks, this_year
+    if month_number not in months:
+      months.append(month_number)
+  return weeks, months, this_year
 
 
 def get_all_days():
@@ -148,7 +193,8 @@ def check_for_date_crossing(latest):
 
 def index(request):
   now = datetime.now()
-  today_date = datetime.now().date()
+  today_date = now.date()
+  month = today_date.month
   week_number = today_date.isocalendar().week
   try:
     latest = TimeStamp.objects.latest('id')
@@ -159,17 +205,17 @@ def index(request):
     dur = '0:00'
   day_data, day_total = get_day_data(today_date)
   week_data, week_total = get_week_data(week_number)
-  week_diff = get_week_diff(week_total)
+  month_data, month_total = get_month_data(month)
+  week_diff = get_week_diff(week_number, week_total)
   context = {
     'latest': latest,
     'dur': format_timedelta(dur),
     'today_date': today_date,
-    'week_number': week_number,
-    'week_total': format_timedelta(week_total),
     'day_data': day_data,
     'day_total': format_timedelta(day_total),
-    'week_diff': format_total_seconds(week_diff),
-    'acc_margin': get_accumulated_margin()
+    'week_number': week_number,
+    'week_total': format_timedelta(week_total),
+    'month_total': format_timedelta(month_total)
     }
   return render(request, 'index.html', context)
 
@@ -276,21 +322,35 @@ def show_week(request, week_number):
   return render(request, 'week_view.html', context)
 
 
-def get_week_diff(week_total):
-  return week_total.total_seconds() - timedelta(0,0,0,0,0,15).total_seconds()
+def get_weekly_goal(week_number):
+  try:
+    hour_goal = HourlyGoals.objects.get(week_number=week_number)
+  except:
+    now = datetime.now()
+    today_date = now.date()
+    week_number = today_date.isocalendar().week
+    HourlyGoals(week_number=week_number).save()
+    hour_goal = HourlyGoals.objects.get(week_number=week_number)
+  return hour_goal.weekly_hours
+
+
+def get_week_diff(week_number, week_total):
+  weekly_goal = get_weekly_goal(week_number)
+  return week_total.total_seconds() - timedelta(0,0,0,0,0,weekly_goal).total_seconds()
 
 
 def show_all_weeks(request):
-  week_numbers, this_year = get_all_week_numbers()
+  week_numbers, months, this_year = get_years_active_period()
   all_week_totals = []
   accumulated_margin = 0
   for week_number in week_numbers:
     days_data, week_total = get_week_data(week_number)
-    week_diff = get_week_diff(week_total)
+    week_diff = get_week_diff(week_number, week_total)
     accumulated_margin += week_diff
     all_week_totals.append({
         'week_number': week_number,
         'week_total': format_timedelta(week_total),
+        'week_goal': get_weekly_goal(week_number),
         'week_diff': format_total_seconds(week_diff),
         'accumulated_margin': format_total_seconds(accumulated_margin)
         })
@@ -301,7 +361,7 @@ def show_all_weeks(request):
 
 
 def get_accumulated_margin():
-  week_numbers, this_year = get_all_week_numbers()
+  week_numbers, months, this_year = get_years_active_period()
   this_week = datetime.now().date().isocalendar().week
   all_week_totals = []
   accumulated_margin = 0
@@ -317,9 +377,10 @@ def get_accumulated_margin():
 
 
 def show_overview(request):
-  week_numbers, this_year = get_all_week_numbers()
+  week_numbers, months, this_year = get_years_active_period()
   all_week_totals = []
   all_days = []
+  months_totals = []
   accumulated_margin = 0
   for week_number in week_numbers:
     days_data, week_total = get_week_data(week_number, reverse=False)
@@ -328,7 +389,15 @@ def show_overview(request):
         'week_total': format_timedelta(week_total)
         })
     all_days.append(days_data)
+  for month in months:
+    month_data, month_total = get_month_data(month)
+    months_totals.append({
+      'month': get_month_name(month),
+      'month_data': month_data,
+      'total': format_timedelta(month_total)
+    })
   context = {
+    'days_data': all_days,
     'all_week_totals': all_week_totals,
-    'days_data': all_days}
+    'months_totals': months_totals}
   return render(request, 'overview.html', context)
