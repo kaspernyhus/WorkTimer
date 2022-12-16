@@ -1,6 +1,6 @@
 body {
   background: rgb(206, 206, 206);
-  font-family: Avenir;
+  font-family: Avenir, sans-serif;
   color: rgb(49, 49, 49);
 }
 
@@ -27,7 +27,7 @@ body {
   background:  rgb(242, 242, 242);
   border: 2px solid rgb(0, 0, 0);
   box-shadow: 0px 6px 0px rgba(0, 0, 0, 0.01), 0px 6px 5px rgba(0, 0, 0, 0.02), 0px 2px 20px rgba(0, 0, 0, 0.1);
-  border-radius: 4px; 
+  border-radius: 4px;
   color: black;
   text-align: center;
   text-decoration: none;
